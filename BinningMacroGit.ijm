@@ -1,14 +1,12 @@
 /// BINNING CODE - Tim Monko 10/31/2018
 // This macro is designed to take multiple 12-bit images, stack them, and draw bins in the same way that 
 // Set your line width manually by doing Image > Adjust > Line Width
+// I recommend 2px, that way a 1px line doesn't get subtracted out with subtractbackground/blurring
 
-
-//TO DO
-//Duplicate the Red Channel into blue if two channels
-
+// Variables for changing the code 
 numberofchannels = 1; 
-usebinningmethod = 1; //If you want pre-sized static bins, then 1
-usefreehandmethod = 0; //If you want to freehand bins, then 1
+usebinningmethod = 1; //If you want pre-sized static bins, then 1 
+usefreehandmethod = 0; //If you want to freehand bins, then 1 (use the hotkey 'b' to add each line to the ROI overlay)
 singlechannelbrightness = 0; //for adjust a single channel that you will also use for binning
 
 rotate90left = 0; 
@@ -16,9 +14,9 @@ multichannelcontrast = 0; // If you want to increase the contrast of a channel f
 contrastchannel = 3; //The channel to get adjusted - this number is ignored if adjustbrightness = 0
 
 numberofbins = 1; //if you want rectangular bins, use this number for the amount of bins of equal size that will be drawn 
-binwidth = 632; //For E16.5,10X-Mid/Cau use 316, for Ros use 158 for 10X-P8 1350, or 316 for 400um bin at E16.5 10X
+binwidth = 632; // In pixels For E16.5,10X-Mid/Cau use 316, for Ros use 158 for 10X-P8 1350, or 316 for 400um bin at E16.5 10X
 binheight = 1000; //For E16.5,10X-Mid/Cau/Ros use 1000, for 10X-P8 630, / 200 um bins for PFC/Motor 
-scale = 1.575; // 4X = 0.62,  10X = 1.575
+scale = 1.575; // 4X = 0.62,  10X = 1.575, this is for setting the pixel length to be the size of the 
 
 ///////////////////////////////////////
 ////////CODE BELOW/////////////////////
