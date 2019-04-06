@@ -3,42 +3,45 @@
 
 runSingleChannel16bitConversion = 0; //for grayscale 16-bit (single channel) images. These need to be converted to a Composite stack to work with the code, set to 1 if this is what you need.
 	//Use the Red channel for all SingleChannel purposes.
+numchannels = 3; //use the number of 16-bit channels, if RGB set to 3
+
 runThresholdCode = 1; //if 1, then run the accompanying code, else skip
 runExtras = 1; //this is specifically for fillholes and remove particles based on size
-runColocCode = 1; //1 = run colocalization using Binary Feature Extractor, 0 = off
+runColocCode = 0; //1 = run colocalization using Binary Feature Extractor, 0 = off
 
 /////////////////////////////////
 ///THRESHOLDING CODE VARIABLES///
 /////////////////////////////////
 
-numchannels = 3; //use the number of 16-bit channels, if RGB set to 3
-
 //RED /GRAY == also for 16-bit gray single channels
-dored = 1;
-redtograyscale = 0; 
-redrbr = 2;
-rthreslow = 0.25; //40 
-rthreshigh = 4;
-redwatererosion = 10;
-redwaterconvex = 0;
+dored = 1; // 1 = will run this  channel, 0 = skip, will close the image
+redtograyscale = 0; // 1 = will not threshold image, instead just puts on grayscale LUT (for things such as WFA)
+redrbr = 2; // Rolling ball radius.  
+	// For old Photoshop binning. At 10X, 0.01 for poor S/N. Up to 0.1 for good S/N and/or larger cells
+	// For RGB usually 1 -5
+	// For new FIJI binning. 0.1 for poor S/N and high cell density, up to 5 for good S/N and lower cell density
+rthreslow = 0.25;  // lower threshold for this channel, this is a "percentage" of the maximum signal from normalization, which helps intuitively. ie 0.20 means that what is kept is all values 20% or higher
+// rthreshigh = 100;
+redwatererosion = 10; // if a number that is not zero is put in convex, then this value is ignored. 10 = around normal watershed algorithm
+redwaterconvex = 0; // Useful for dividing cells (PH3 + EdU) 0.95 might be good for dividng cells, but this is potentially threshold dependent. Keep this number high or it won't watershed soma effectively for our purposes (morphology analysis would be different)
 
 //GREEN
 dogreen = 1;
 greentograyscale = 0;
 greenrbr = 0.1; // 0.01ish for 16-bit, 10ish for 8-bit (at 10x)
 gthreslow = 0.15; //25
-gthreshigh = 4;
+// gthreshigh = 100;
 greenwatererosion = 10;
 greenwaterconvex = 0;
 
 //BLUE
-doblue = 0; // 1 = will run this  channel, 0 = skip, will close the image
-bluetograyscale = 0; // 1 = will not threshold image, instead just puts on grayscale LUT
-bluerbr = 1; // Rolling ball radius.  At 10X, 0.01 for poor S/N. Up to 0.1 for good S/N and/or larger cells
-bthreslow = 0.20; // lower threshold for this channel, this is a "percentage" of the maximum signal from normalization, which helps intuitively. ie 0.20 means that what is kept is all values 20% or higher
-bthreshigh = 4; // upper threshold for green channel, keep at 4 for 16bit channels (is 400% maximum value if normalizing on 32-bit)
-bluewatererosion = 10; // if a number that is not zero is put in convex, then this value is ignored. 10 = around normal watershed algorithm
-bluewaterconvex = 0.95; // 0.95 might be good for dividng cells, but this is potentially threshold dependent
+doblue = 0; 
+bluetograyscale = 0; 
+bluerbr = 1; 
+bthreslow = 0.20;
+// bthreshigh = 100; // upper threshold for green channel, keep at 4 for 16bit channels (is 400% maximum value if normalizing on 32-bit)
+bluewatererosion = 10; 
+bluewaterconvex = 0.95; 
 
 //////////////////////
 ///EXTRAS Variables///
@@ -109,6 +112,7 @@ if (runThresholdCode == 1) {
 	if (doblue == 1 && bluetograyscale == 0) {
 		selectWindow("C3-"+imageTitle); 
 		rename("Blue"); //useful to more reliably call on the image, especially in future macros (such as coloc macro)
+		run("Grays");
 		run("Subtract Background...", "rolling=bluerbr sliding"); //Subtract background using slidiing parabaloid. radius =0.01 seems to be appropriate for all 16-bit counts (for Tim at least)
 	
 		run("Duplicate...", " "); //Duplicates image so that original is not blurred, this code will add a -1 to the title of the new image
@@ -127,7 +131,7 @@ if (runThresholdCode == 1) {
 
 		setAutoThreshold("Otsu"); //this command preferred over run("Threshold..."), because it uses Otsu's method 
 		//run("Threshold..."); 
-		setThreshold(bthreslow, bthreshigh); //using 32-bit float values gives a max of 3.4e38, but nothing should be above 4
+		setThreshold(bthreslow, 100); //using 32-bit float values gives a max of 3.4e38, but nothing should be above 4
 		setOption("BlackBackground", true);
 		run("Convert to Mask");
 		selectWindow("Blue"); 
@@ -156,6 +160,7 @@ if (runThresholdCode == 1) {
 	if (dogreen == 1 && greentograyscale == 0) {
 		selectWindow("C2-"+imageTitle);
 		rename("Green"); 
+		run("Grays");
 		run("Subtract Background...", "rolling=greenrbr sliding"); 
 
 		run("Duplicate...", " "); 
@@ -173,7 +178,7 @@ if (runThresholdCode == 1) {
 		run("Divide...", "value=mxg"); 
 
 		setAutoThreshold("Otsu"); 
-		setThreshold(gthreslow, gthreshigh); 
+		setThreshold(gthreslow, 100); 
 		setOption("BlackBackground", true);
 		run("Convert to Mask");
 		selectWindow("Green"); 
@@ -196,6 +201,7 @@ if (runThresholdCode == 1) {
 	if (dored == 1 && redtograyscale == 0) {
 		selectWindow("C1-"+imageTitle);
 		rename("Red"); 
+		run("Grays");
 		run("Subtract Background...", "rolling=redrbr sliding");
 
 		run("Duplicate...", " ");
@@ -214,7 +220,7 @@ if (runThresholdCode == 1) {
 		run("Divide...", "value=mxr"); 
 
 		setAutoThreshold("Otsu");
-		setThreshold(rthreslow, rthreshigh); 
+		setThreshold(rthreslow, 100); 
 		setOption("BlackBackground", true);
 		run("Convert to Mask");
 		//}
