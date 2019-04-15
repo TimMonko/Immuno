@@ -1,5 +1,5 @@
-# Tim Monko 01/25/2019-02/01/2019 ----
-# Cell Distribution Statistics. This purpose is to take outputted distribution stuff from Matlab and do stats in R 
+# Tim Monko 01/25/2019-04/15/2019 ----
+# Cell Distribution Statistics. The purpose is to take raw tiff files outputted from ImageJ/FIJI and get distrubtion data relative to a position in R. 
 
 # Be sure to set proper working directory. 
 # Shorcut to set: CTRL+SHFT+H. 
@@ -15,7 +15,7 @@ library(magick) # A more general image altering package
 library(imager) # For loading of stacks, I think to be used with magick
 # library(EBImage) # This is probably the easiest and most targeted one, but is maybe jus8t a small version of ImageMagick
 # library(shiny) # This is needed for some ofe xROI's functionality - maybe? 
-library(xROI) # For drawing a pol\
+library(xROI) # For drawing a polygon interactively over an image
 library(rowr) # For editing of list into cols with diff lengths - maybe not needed 
 
 ## PREPPING IMAGES FOR ANALYSIS ----
@@ -111,7 +111,7 @@ for (im in 1:file.number) {
   }
 }
 
-## ----
+## For quick visualization of 1 layer of the data----
 par(mfrow = c(2,1)) # Adjust the plot for visualizing both the ROI and the histogram of the centers
 plot(combo.px)
 with(centers, points(mx,my,col="magenta"))
