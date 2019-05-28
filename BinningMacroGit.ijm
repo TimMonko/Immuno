@@ -4,19 +4,22 @@
 // I recommend 2px, that way a 1px line doesn't get subtracted out with subtractbackground/blurring
 
 // Variables for changing the code 
-numberofchannels = 1; 
-usebinningmethod = 1; //If you want pre-sized static bins, then 1 
-usefreehandmethod = 0; //If you want to freehand bins, then 1 (use the hotkey 'b' to add each line to the ROI overlay)
+numberofchannels = 3; 
+usebinningmethod = 0; //If you want pre-sized static bins, then 1 
+usefreehandmethod = 1; //If you want to freehand bins, then 1 (use the hotkey 'b' to add each line to the ROI overlay)
 singlechannelbrightness = 0; //for adjust a single channel that you will also use for binning
 
-rotate90left = 0; 
-multichannelcontrast = 0; // If you want to increase the contrast of a channel for binning purposes use this
-contrastchannel = 3; //The channel to get adjusted - this number is ignored if adjustbrightness = 0
+duplicatechannel = 1; //for opening another pane of a channel of interest (i.e. DAPI)
+whichchannel = 1; // Select among the series of channels, numerically, that you want duplicated 
+
+rotate90left = 1; 
+multichannelcontrast = 1; // If you want to increase the contrast of a channel for binning purposes use this
+contrastchannel = 1; //The channel to get adjusted - this number is ignored if adjustbrightness = 0
 
 numberofbins = 1; //if you want rectangular bins, use this number for the amount of bins of equal size that will be drawn 
 binwidth = 632; // In pixels For E16.5,10X-Mid/Cau use 316, for Ros use 158 for 10X-P8 1350, or 316 for 400um bin at E16.5 10X
 binheight = 1000; //For E16.5,10X-Mid/Cau/Ros use 1000, for 10X-P8 630, / 200 um bins for PFC/Motor 
-scale = 1.575; // 4X = 0.62,  10X = 1.575, this is for setting the pixel length to be the size of the 
+scale = 0.62; // 4X = 0.62,  10X = 1.575, this is for setting the pixel length to be the size of the 
 
 ///////////////////////////////////////
 ////////CODE BELOW/////////////////////
@@ -66,6 +69,13 @@ for (i = 0; i < listlength; i) {
 	run("Set Scale...", "distance=scale known=1 pixel=1 unit=µm global"); 
 	setForegroundColor(255, 255, 255); //to make the box outline white use (255, 255, 255) and then for black use (0, 0, 0)
 	run("Line Width...", "line=2"); // Used to edit the size of the line for the bin
+
+	if (duplicatechannel ==1 ) {
+		run("Duplicate...", "duplicate channels=whichchannel");
+		run("Grays");
+		setMinAndMax(0, 866);
+		call("ij.ImagePlus.setDefault16bitRange", 12);
+	}
 	
 	if (usebinningmethod == 1) {
 		for (bins = 0; bins < numberofbins; bins++) {
@@ -76,7 +86,7 @@ for (i = 0; i < listlength; i) {
 	}
 
 	if (usefreehandmethod == 1) {
-		waitForUser("Press OK When Finished", "(1) Use the line tool or polygon tool \n(2) Distance is shown in the FIJI toolbar at the bottom \n(3) Press 'b' to add the line or polybox to the overlay");
+		waitForUser("Press OK When Finished", "(1) Use the line tool or polygon tool \n(2) Distance is shown in the FIJI toolbar at the bottom \n(3) Press 'b' to add the line or polybox to the overlay \n(4) If present, close duplicated channel before 'OK' ");
 	}
 	i = i + numberofchannels; 
 	print(i);
