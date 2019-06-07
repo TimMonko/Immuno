@@ -1,4 +1,5 @@
-# Tim Monko 03/14/2018 ----
+# Tim Monko 03/14/2018----
+# Rewritten for GIT 06/07/2019
 # Cell Counting Statistics. This purpose is to use the databases from cell counting in organizing, grouping, and statting my data. 
 
 # Be sure to set proper working directory. 
@@ -8,89 +9,65 @@
 
 library(tidyverse) # Includes ggplot2, tidyr, dplyr, stringr, readr, tibble, purrr, forcats, broom 
 library(ggpubr)
-library(svglite)
+# library(svglite)
 library(broom)
 rm(list = ls())
 
 ## ----
-rawdata <- read.csv("Gbx2P8PU1.csv")
+rawdata <- read.csv("Gbx2P8PU1.csv") # Set the file that you want to read here
 
 ## VARIABLES TO DEFINE ----
 
-#rawdata <- read.csv("\\nakagawa.neuroscience.umn.edu\NakagawaLabServer4\Tim old\004 R Files\RawDataFiles\Gbx2P8Brn2ROR.csv") # Set the file that you want to read here
- 
-voi <- quo(density) #used for t-test and MANOVA analysis (as first grouping variable)
-voi2 <- quo(density) #used for MANOVA analysis as the second grouping variable
+dep.variable <- quo(density) #used for t-test and MANOVA analysis (as first grouping variable)
+dep.variable.2 <- quo(density) #used for MANOVA analysis as the second grouping variable
+Bin1 <- 1 # Bin for separation, such as S1 or Caudal
+Bin2 <- 2 
 
-#source("Functions/simplefunctions.R") # Loads in the functions used for the rest of the script
-multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
-  library(grid)
-  
-  # Make a list from the ... arguments and plotlist
-  plots <- c(list(...), plotlist)
-  
-  numPlots = length(plots)
-  
-  # If layout is NULL, then use 'cols' to determine layout
-  if (is.null(layout)) {
-    # Make the panel
-    # ncol: Number of columns of plots
-    # nrow: Number of rows needed, calculated from # of cols
-    layout <- matrix(seq(1, cols * ceiling(numPlots/cols)),
-                     ncol = cols, nrow = ceiling(numPlots/cols))
-  }
-  
-  if (numPlots==1) {
-    print(plots[[1]])
-    
-  } else {
-    # Set up the page
-    grid.newpage()
-    pushViewport(viewport(layout = grid.layout(nrow(layout), ncol(layout))))
-    
-    # Make each plot, in the correct location
-    for (i in 1:numPlots) {
-      # Get the i,j matrix positions of the regions that contain this subplot
-      matchidx <- as.data.frame(which(layout == i, arr.ind = TRUE))
-      
-      print(plots[[i]], vp = viewport(layout.pos.row = matchidx$row,
-                                      layout.pos.col = matchidx$col))
-    }
-  }
-}
-grouped_var2 <- function(dataframe, var.of.interest) {
+
+grouped_var <- function(dataframe, var.of.interest) {
   #grouped_var2 allows the user to define the variable of interest about with the quo(arg) call. then the !! var.of.interest removes the special quosure to be evaluted in the functions, to be used only for upper level function calls. Otherwise use grouped_var original
-  var3 <- 
+  grouped.var <- 
     dataframe %>% # Calls the data.frame of interest
     drop_na(!! var.of.interest) %>% # Removes all rows with NAs,  could use filter(!is.na(Ctip2)), but drop_na allows for dropping based on multiple criteria
     group_by(S1.V1, WT.cKO, Pair) %>% # Groups the rawdata according to a variable
     summarize(var.mean = mean(!! var.of.interest)) # Used for functions performed on the grouped data
-  return(var3)
+  return(grouped.var)
 }
-means_var <- function(grouped.var, WTcKO, S1V1) {
-  subset(grouped.var, WT.cKO == WTcKO & S1.V1 == S1V1)
+subset_var <- function(grouped.var, WTcKO, Bin) {
+  subset(grouped.var, WT.cKO == WTcKO & S1.V1 == Bin) # Subset may present an issue. Pay attention to S1.V1 
 }
 ttest_var <- function(means.1, means.2, equalvari = TRUE, paird = TRUE) {
   tidy(t.test(means.1$var.mean, means.2$var.mean, var.equal = equalvari, paired = paird))
 }
 
-# I am still unsure how to interpret a MANOVA, so this will not be used too much at this time 
-
+wilcoxtest_var <- function(means.1, means.2, paird = TRUE) {
+  tidy(wilcox.test(means.1$var.mean, means.2$var.mean, paired = paird))
+}
 ## DATA MANIPULATION AND TTEST STATISTICS
 ###---###
 
-group.var <- grouped_var2(rawdata, voi) # Pools means for each grouping (in this case WTcKO and S1/V1 and Pair) for a certain variable 
+group.var <- grouped_var(rawdata, dep.variable) # Pools means for each grouping (in this case WTcKO and S1/V1 and Pair) for a certain variable 
 
-means.WT.S1  <- means_var(group.var, 1, 1) # Distributes the means to a variable for calling on in a t-test
-means.cKO.S1 <- means_var(group.var, 2, 1)
-means.WT.V1  <- means_var(group.var, 1, 2)
-means.cKO.V1 <- means_var(group.var, 2, 2)
+means.WT.Bin1  <- subset_var(group.var, 1, Bin1) # Distributes the means to a variable for calling on in a t-test
+means.cKO.Bin1 <- subset_var(group.var, 2, Bin1)
+means.WT.Bin2  <- subset_var(group.var, 1, Bin2)
+means.cKO.Bin2 <- subset_var(group.var, 2, Bin2)
 
-p.S1 <- ttest_var(means.WT.S1, means.cKO.S1)
-p.V1 <- ttest_var(means.WT.V1, means.cKO.V1)
+means.WT.comboBin <- bind_rows(means.WT.Bin1, means.WT.Bin2) %>% 
+  group_by(WT.cKO, Pair) %>%
+  summarize(var.mean = sum(var.mean))
+means.cKO.comboBin <- bind_rows(means.cKO.Bin1, means.cKO.Bin2) %>%
+  group_by(WT.cKO, Pair) %>%
+  summarize(var.mean = sum(var.mean))
 
-means.S1 <- bind_rows(means.WT.S1, means.cKO.S1)
-means.V1 <- bind_rows(means.WT.V1, means.cKO.V1)
+means.Bin1 <- bind_rows(means.WT.Bin1, means.cKO.Bin1) # These get combined for the purposes of making figures, so that they are grouped variables in one tibble 
+means.Bin2 <- bind_rows(means.WT.Bin2, means.cKO.Bin2)
+means.comboBin <- bind_rows(means.WT.combo, means.cKO.combo)
+
+p.t.Bin1 <- ttest_var(means.WT.Bin1, means.cKO.Bin1) # Paired T-test 
+p.t.Bin2 <- ttest_var(means.WT.Bin2, means.cKO.Bin2)
+p.t.comboBin <- ttest_var(means.WT.comboBin, means.cKO.comboBin)
+p.w.Bin1 <- wilcoxtest_var(means.WT.Bin1, means.WT.Bin1)
 
 p.S1
 p.V1

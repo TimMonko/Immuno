@@ -5,21 +5,21 @@
 
 // Variables for changing the code 
 numberofchannels = 3; 
-usebinningmethod = 0; //If you want pre-sized static bins, then 1 
-usefreehandmethod = 1; //If you want to freehand bins, then 1 (use the hotkey 'b' to add each line to the ROI overlay)
+usebinningmethod = 1; //If you want pre-sized static bins, then 1 
+usefreehandmethod = 0; //If you want to freehand bins, then 1 (use the hotkey 'b' to add each line to the ROI overlay)
 singlechannelbrightness = 0; //for adjust a single channel that you will also use for binning
 
-duplicatechannel = 1; //for opening another pane of a channel of interest (i.e. DAPI)
+duplicatechannel = 0; //for opening another pane of a channel of interest (i.e. DAPI)
 whichchannel = 1; // Select among the series of channels, numerically, that you want duplicated 
 
-rotate90left = 1; 
+rotate90left = 0; 
 multichannelcontrast = 1; // If you want to increase the contrast of a channel for binning purposes use this
 contrastchannel = 1; //The channel to get adjusted - this number is ignored if adjustbrightness = 0
 
 numberofbins = 1; //if you want rectangular bins, use this number for the amount of bins of equal size that will be drawn 
-binwidth = 632; // In pixels For E16.5,10X-Mid/Cau use 316, for Ros use 158 for 10X-P8 1350, or 316 for 400um bin at E16.5 10X
-binheight = 1000; //For E16.5,10X-Mid/Cau/Ros use 1000, for 10X-P8 630, / 200 um bins for PFC/Motor 
-scale = 0.62; // 4X = 0.62,  10X = 1.575, this is for setting the pixel length to be the size of the 
+binwidth = 1350; // In pixels For E16.5,10X-Mid/Cau use 316, for Ros use 158 for 10X-P8 1350, or 316 for 400um bin at E16.5 10X
+binheight = 630; //For E16.5,10X-Mid/Cau/Ros use 1000, for 10X-P8 630, / 200 um bins for PFC/Motor 
+scale = 1.575; // 4X = 0.62,  10X = 1.575, this is for setting the pixel length to be the size of the 
 
 ///////////////////////////////////////
 ////////CODE BELOW/////////////////////
