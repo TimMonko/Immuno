@@ -20,7 +20,7 @@ rawdata <- read.csv("Gbx2P8PU1.csv") # Set the file that you want to read here
 
 dep.variable <- quo(density) #used for t-test and MANOVA analysis (as first grouping variable)
 dep.variable.2 <- quo(density) #used for MANOVA analysis as the second grouping variable
-Bin1 <- 1 # Bin for separation, such as S1 or Caudal
+Bin1 <- 1 # Bin for separation, such as S1 or Caudal, or 1 etc
 Bin2 <- 2 
 
 
@@ -29,7 +29,7 @@ grouped_var <- function(dataframe, var.of.interest) {
   grouped.var <- 
     dataframe %>% # Calls the data.frame of interest
     drop_na(!! var.of.interest) %>% # Removes all rows with NAs,  could use filter(!is.na(Ctip2)), but drop_na allows for dropping based on multiple criteria
-    group_by(S1.V1, WT.cKO, Pair) %>% # Groups the rawdata according to a variable
+    group_by(S1.V1, WT.cKO, Pair) %>% # Groups the rawdata according to a variable LEVEL may go here
     summarize(var.mean = mean(!! var.of.interest)) # Used for functions performed on the grouped data
   return(grouped.var)
 }
@@ -62,15 +62,17 @@ means.cKO.comboBin <- bind_rows(means.cKO.Bin1, means.cKO.Bin2) %>%
 
 means.Bin1 <- bind_rows(means.WT.Bin1, means.cKO.Bin1) # These get combined for the purposes of making figures, so that they are grouped variables in one tibble 
 means.Bin2 <- bind_rows(means.WT.Bin2, means.cKO.Bin2)
-means.comboBin <- bind_rows(means.WT.combo, means.cKO.combo)
+means.comboBin <- bind_rows(means.WT.comboBin, means.cKO.comboBin)
 
 p.t.Bin1 <- ttest_var(means.WT.Bin1, means.cKO.Bin1) # Paired T-test 
 p.t.Bin2 <- ttest_var(means.WT.Bin2, means.cKO.Bin2)
 p.t.comboBin <- ttest_var(means.WT.comboBin, means.cKO.comboBin)
-p.w.Bin1 <- wilcoxtest_var(means.WT.Bin1, means.WT.Bin1)
+p.w.Bin1 <- wilcoxtest_var(means.WT.Bin1, means.cKO.Bin2) # This needs fixed 
+p.w.Bin2 <- wilcoxtest_var(means.WT.Bin2, means.cKO.Bin2)
+p.w.comboBin <- wilcoxtest_var(means.WT.comboBin, means.cKO.comboBin)
 
-p.S1
-p.V1
+bind_rows(p.t.Bin1, p.t.Bin2, p.t.comboBin, .id = 'Test')
+
 
 ## MANOVA Statistics ----
 ####
