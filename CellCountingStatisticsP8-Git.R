@@ -18,7 +18,7 @@ rawdata <- read.csv("Gbx2P8PU1.csv") # Set the file that you want to read here
 
 ## VARIABLES TO DEFINE ----
 
-dep.variable <- quo(density) #used for t-test and MANOVA analysis (as first grouping variable)
+dep.variable <- quo(PU1) #used for t-test and MANOVA analysis (as first grouping variable)
 dep.variable.2 <- quo(density) #used for MANOVA analysis as the second grouping variable
 Bin1 <- 1 # Bin for separation, such as S1 or Caudal, or 1 etc
 Bin2 <- 2 
@@ -67,11 +67,18 @@ means.comboBin <- bind_rows(means.WT.comboBin, means.cKO.comboBin)
 p.t.Bin1 <- ttest_var(means.WT.Bin1, means.cKO.Bin1) # Paired T-test 
 p.t.Bin2 <- ttest_var(means.WT.Bin2, means.cKO.Bin2)
 p.t.comboBin <- ttest_var(means.WT.comboBin, means.cKO.comboBin)
-p.w.Bin1 <- wilcoxtest_var(means.WT.Bin1, means.cKO.Bin2) # This needs fixed 
+p.w.Bin1 <- wilcoxtest_var(means.WT.Bin1, means.cKO.Bin1) # This needs fixed 
 p.w.Bin2 <- wilcoxtest_var(means.WT.Bin2, means.cKO.Bin2)
 p.w.comboBin <- wilcoxtest_var(means.WT.comboBin, means.cKO.comboBin)
 
-bind_rows(p.t.Bin1, p.t.Bin2, p.t.comboBin, .id = 'Test')
+bind_rows(
+  't.Bin1' = p.t.Bin1, 
+  't.Bin2' = p.t.Bin2,
+  't.combo' = p.t.comboBin,
+  'w.Bin1' = p.w.Bin1,
+  'w.Bin2' = p.w.Bin2,
+  'w.combo' = p.w.comboBin,
+  .id = 'Test')
 
 
 ## MANOVA Statistics ----
