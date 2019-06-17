@@ -14,14 +14,14 @@ library(broom)
 rm(list = ls())
 
 ## ----
-rawdata <- read.csv("Gbx2P8PU1.csv") # Set the file that you want to read here
+rawdata <- read.csv("Gbx2E14PH3.csv") # Set the file that you want to read here
 
 ## VARIABLES TO DEFINE ----
 
-dep.variable <- quo(PU1) #used for t-test and MANOVA analysis (as first grouping variable)
-dep.variable.2 <- quo(density) #used for MANOVA analysis as the second grouping variable
-Bin1 <- 1 # Bin for separation, such as S1 or Caudal, or 1 etc
-Bin2 <- 2 
+dep.variable <- quo(PH3b) #used for t-test and MANOVA analysis (as first grouping variable)
+dep.variable.2 <- quo(PH3b) #used for MANOVA analysis as the second grouping variable
+Bin1 <- 'C' # Bin for separation, such as S1 or Caudal, or 1 etc
+Bin2 <- 'R' 
 
 
 grouped_var <- function(dataframe, var.of.interest) {
@@ -29,19 +29,19 @@ grouped_var <- function(dataframe, var.of.interest) {
   grouped.var <- 
     dataframe %>% # Calls the data.frame of interest
     drop_na(!! var.of.interest) %>% # Removes all rows with NAs,  could use filter(!is.na(Ctip2)), but drop_na allows for dropping based on multiple criteria
-    group_by(S1.V1, WT.cKO, Pair) %>% # Groups the rawdata according to a variable LEVEL may go here
+    group_by(Level, WT.cKO, Pair) %>% # Groups the rawdata according to a variable LEVEL may go here
     summarize(var.mean = mean(!! var.of.interest)) # Used for functions performed on the grouped data
   return(grouped.var)
 }
 subset_var <- function(grouped.var, WTcKO, Bin) {
-  subset(grouped.var, WT.cKO == WTcKO & S1.V1 == Bin) # Subset may present an issue. Pay attention to S1.V1 
+  subset(grouped.var, WT.cKO == WTcKO & Level == Bin) # Subset may present an issue. Pay attention to S1.V1 
 }
 ttest_var <- function(means.1, means.2, equalvari = TRUE, paird = TRUE) {
   tidy(t.test(means.1$var.mean, means.2$var.mean, var.equal = equalvari, paired = paird))
 }
 
-wilcoxtest_var <- function(means.1, means.2, paird = TRUE) {
-  tidy(wilcox.test(means.1$var.mean, means.2$var.mean, paired = paird))
+wilcoxtest_var <- function(means.1, means.2) {
+  tidy(wilcox.test(means.1$var.mean, means.2$var.mean, paired = TRUE))
 }
 ## DATA MANIPULATION AND TTEST STATISTICS
 ###---###
