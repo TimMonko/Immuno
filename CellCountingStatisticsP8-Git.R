@@ -14,14 +14,14 @@ library(broom)
 rm(list = ls())
 
 ## ----
-rawdata <- read.csv("Gbx2E14PH3Tbr2.csv") # Set the file that you want to read here
+rawdata <- read.csv("Gbx2P8Brn2ROR.csv") # Set the file that you want to read here
 
 ## VARIABLES TO DEFINE ----
 
-dep.variable <- quo(Tbr2) #used for t-test and MANOVA analysis (as first grouping variable)
-dep.variable.2 <- quo(PH3b) #used for MANOVA analysis as the second grouping variable
-Bin1 <- 'C' # Bin for separation, such as S1 or Caudal, or 1 etc
-Bin2 <- 'M' 
+dep.variable <- quo(Brn2) #used for t-test and MANOVA analysis (as first grouping variable)
+# dep.variable.2 <- quo(ROR) #used for MANOVA analysis as the second grouping variable
+Bin1 <- '1' # Bin for separation, such as S1 or Caudal, or 1 etc
+Bin2 <- '2' 
 
 
 grouped_var <- function(dataframe, var.of.interest) {
@@ -29,12 +29,12 @@ grouped_var <- function(dataframe, var.of.interest) {
   grouped.var <- 
     dataframe %>% # Calls the data.frame of interest
     drop_na(!! var.of.interest) %>% # Removes all rows with NAs,  could use filter(!is.na(Ctip2)), but drop_na allows for dropping based on multiple criteria
-    group_by(Level, WT.cKO, Pair) %>% # Groups the rawdata according to a variable LEVEL may go here
+    group_by(S1.V1, WT.cKO, Pair) %>% # Groups the rawdata according to a variable LEVEL may go here
     summarize(var.mean = mean(!! var.of.interest)) # Used for functions performed on the grouped data
   return(grouped.var)
 }
 subset_var <- function(grouped.var, WTcKO, Bin) {
-  subset(grouped.var, WT.cKO == WTcKO & Level == Bin) # Subset may present an issue. Pay attention to S1.V1 
+  subset(grouped.var, WT.cKO == WTcKO & S1.V1 == Bin) # Subset may present an issue. Pay attention to S1.V1 
 }
 ttest_var <- function(means.1, means.2, equalvari = TRUE, paird = TRUE) {
   tidy(t.test(means.1$var.mean, means.2$var.mean, var.equal = equalvari, paired = paird))
@@ -82,49 +82,81 @@ test.results <- bind_rows(
 
 test.results
 
+# PLOTS FOR QUICK VISUALIZATION
+
+plot.Bin1 <- ggplot(means.Bin1, aes(x = WT.cKO, y = var.mean)) +
+  theme_classic(base_size = 24) +
+  geom_point(color = means.Bin1$WT.cKO, size = 1.2) +
+  labs(title = 'Bin 1',
+       y = 'Means') +   
+  geom_line(aes(group = means.Bin1$Pair)) +
+  scale_x_continuous(breaks = c(1, 2), 
+                     labels = c("WT", "cKO"), 
+                     limits = c(0.8,2.2)) +
+  annotate("text", x = 1.5, y = max(means.Bin1$var.mean) + 0.01*max(means.Bin1$var.mean),
+           label = if (p.t.Bin1$p.value > .001) {
+             paste("p = ", formatC(p.t.Bin1$p.value, digits = 3, format = "f"))
+           } else {" p < .001"},
+           size = 3)
+
+
+plot.Bin2 <- ggplot(means.Bin2, aes(x = WT.cKO, y = var.mean)) +
+  theme_classic(base_size = 24) +
+  geom_point(color = means.Bin2$WT.cKO, size = 1.2) +
+  labs(title = 'Bin 2',
+       y = 'Means') +   
+  geom_line(aes(group = means.Bin2$Pair)) +
+  scale_x_continuous(breaks = c(1, 2), 
+                     labels = c("WT", "cKO"), 
+                     limits = c(0.8,2.2)) +
+  annotate("text", x = 1.5, y = max(means.Bin2$var.mean) + 0.01*max(means.Bin2$var.mean),
+           label = if (p.t.Bin2$p.value > .001) {
+             paste("p = ", formatC(p.t.Bin2$p.value, digits = 3, format = "f"))
+           } else {" p < .001"},
+           size = 3)
+
+plot.comboBin <- ggplot(means.comboBin, aes(x = WT.cKO, y = var.mean)) +
+  theme_classic(base_size = 24) +
+  geom_point(color = means.comboBin$WT.cKO, size = 1.2) +
+  labs(title = 'Bin Combo',
+       y = 'Means') +   
+  geom_line(aes(group = means.comboBin$Pair)) +
+  scale_x_continuous(breaks = c(1, 2), 
+                     labels = c("WT", "cKO"), 
+                     limits = c(0.8,2.2)) +
+  annotate("text", x = 1.5, y = max(means.comboBin$var.mean) + 0.01*max(means.comboBin$var.mean),
+           label = if (p.t.comboBin$p.value > .001) {
+             paste("p = ", formatC(p.t.comboBin$p.value, digits = 3, format = "f"))
+           } else {" p < .001"},
+           size = 3)
+
+plot(plot.Bin1)
+plot(plot.Bin2)
+# plot(plot.comboBin)
 
 ## PLOTTING FOR PUBLISHINGS, WTIH FXN STYLE INPUTS ----
 ###---###
 ###---###
 
-file.name.saveas <- "P8-Gbx2-PU1density-S1.png"
+file.name.saveas <- "P8-Gbx2-S1-Brn2.svg"
 plot.df <- means.Bin1
-labs.title <- "Bin1"
+labs.title <- "S1"
 labs.x <- "Genotype"
-labs.y <- "Tbr2+ cells"
-p.val <- p.S1$p.value
+labs.y <- "Brn2+ cells"
+p.val <- p.t.Bin1$p.value
 
 data.x <- plot.df$WT.cKO
 data.y <- plot.df$var.mean
-theme.size <- 24
+theme.size <- 10
 plot.color <- plot.df$WT.cKO
 line.group <- plot.df$Pair
-p.size <- 3
+#p.size <- 3
 
 # Plot the graph with above parameters. Change the target if you want to do and store multiple graphs for a later multiplot function
-plot.1 <- ggplot(plot.df, aes(x = data.x, y = data.y)) +
+print.plot <- ggplot(plot.df, aes(x = data.x, y = data.y)) +
   theme_classic(base_size = theme.size) +
   geom_point(color = plot.color, 
-             size = 1.2) + 
-  labs(title = labs.title,
-       x = labs.x,
-       y = labs.y) + 
-  geom_line(aes(group = line.group)) +
-  scale_x_continuous(breaks = c(1, 2), 
-                     labels = c("WT", "cKO"), 
-                     limits = c(0.8,2.2)) +
-  annotate("text", x = 1.5, y = max(data.y),
-           label = if (p.val > .001) {
-             paste("p = ", formatC(p.val, digits = 3, format = "f"))
-           } else {" p < .001"},
-           size = p.size)
-
-plot.1
-
-plot.2 <- ggplot(plot.df, aes(x = data.x, y = data.y)) +
-  theme_classic(base_size = theme.size) +
-  geom_point(color = plot.color, 
-             size = 3) + 
+             size = 1) + 
   labs(title = labs.title,
        x = labs.x,
        y = labs.y) + 
@@ -133,10 +165,10 @@ plot.2 <- ggplot(plot.df, aes(x = data.x, y = data.y)) +
                      labels = c("CTRL", "cKO"), 
                      limits = c(0.8,2.2))
 
-plot.2
+print.plot
 ## For saving the most recently called plot ----
 
-ggsave(filename = file.name.saveas, device = "png", width = 2.5, height = 4, units = "in")
+ggsave(filename = file.name.saveas, device = "svg", width = 3, height = 4, units = "cm") # Yasushi likes 3x4 the best 
 
 
 ## OLD MANOVA CODE, KEPT INCASE NEEDED IN FUTURE ----
