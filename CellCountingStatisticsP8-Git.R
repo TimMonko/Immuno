@@ -14,14 +14,14 @@ library(broom)
 rm(list = ls())
 
 ## ----
-rawdata <- read.csv("Gbx2E14PH3.csv") # Set the file that you want to read here
+rawdata <- read.csv("Gbx2E14PH3Tbr2.csv") # Set the file that you want to read here
 
 ## VARIABLES TO DEFINE ----
 
-dep.variable <- quo(PH3b) #used for t-test and MANOVA analysis (as first grouping variable)
+dep.variable <- quo(Tbr2) #used for t-test and MANOVA analysis (as first grouping variable)
 dep.variable.2 <- quo(PH3b) #used for MANOVA analysis as the second grouping variable
 Bin1 <- 'C' # Bin for separation, such as S1 or Caudal, or 1 etc
-Bin2 <- 'R' 
+Bin2 <- 'M' 
 
 
 grouped_var <- function(dataframe, var.of.interest) {
@@ -71,7 +71,7 @@ p.w.Bin1 <- wilcoxtest_var(means.WT.Bin1, means.cKO.Bin1) # This needs fixed
 p.w.Bin2 <- wilcoxtest_var(means.WT.Bin2, means.cKO.Bin2)
 p.w.comboBin <- wilcoxtest_var(means.WT.comboBin, means.cKO.comboBin)
 
-bind_rows(
+test.results <- bind_rows(
   't.Bin1' = p.t.Bin1, 
   't.Bin2' = p.t.Bin2,
   't.combo' = p.t.comboBin,
@@ -80,41 +80,18 @@ bind_rows(
   'w.combo' = p.w.comboBin,
   .id = 'Test')
 
+test.results
 
-## MANOVA Statistics ----
-####
-#If running MANOVA, be sure to analyze above section 
-
-group.var2 <- grouped_var2(rawdata, voi2)
-
-means2.WT.S1  <- means_var(group.var2, 1, 1)
-means2.cKO.S1 <- means_var(group.var2, 2, 1)
-means2.WT.V1  <- means_var(group.var2, 1, 2)
-means2.cKO.V1 <- means_var(group.var2, 2, 2)
-
-means2.S1 <- bind_rows(means2.WT.S1, means2.cKO.S1)
-means2.V1 <- bind_rows(means2.WT.V1, means2.cKO.V1)
-
-manova.S1 <- manova(cbind(means.S1$var.mean, means2.S1$var.mean) ~ means.S1$WT.cKO)
-# Output: p.value is at the end of the listing
-tidy(manova.S1) 
-# Output: "Response 1" = voi (1st variable of interest), Pr(>F) = p.value
-#         "Response 2" = voi2
-summary.aov(manova.S1)
-
-manova.V1 <- manova(cbind(means.V1$var.mean, means2.V1$var.mean) ~ means.V1$WT.cKO)
-tidy(manova.V1)
-summary.aov(manova.V1)
 
 ## PLOTTING FOR PUBLISHINGS, WTIH FXN STYLE INPUTS ----
 ###---###
 ###---###
 
 file.name.saveas <- "P8-Gbx2-PU1density-S1.png"
-plot.df <- means.S1
-labs.title <- "S1"
+plot.df <- means.Bin1
+labs.title <- "Bin1"
 labs.x <- "Genotype"
-labs.y <- "PU1+ cells/mm2"
+labs.y <- "Tbr2+ cells"
 p.val <- p.S1$p.value
 
 data.x <- plot.df$WT.cKO
@@ -160,3 +137,29 @@ plot.2
 ## For saving the most recently called plot ----
 
 ggsave(filename = file.name.saveas, device = "png", width = 2.5, height = 4, units = "in")
+
+
+## OLD MANOVA CODE, KEPT INCASE NEEDED IN FUTURE ----
+####
+#If running MANOVA, be sure to analyze above section 
+
+group.var2 <- grouped_var2(rawdata, voi2)
+
+means2.WT.S1  <- means_var(group.var2, 1, 1)
+means2.cKO.S1 <- means_var(group.var2, 2, 1)
+means2.WT.V1  <- means_var(group.var2, 1, 2)
+means2.cKO.V1 <- means_var(group.var2, 2, 2)
+
+means2.S1 <- bind_rows(means2.WT.S1, means2.cKO.S1)
+means2.V1 <- bind_rows(means2.WT.V1, means2.cKO.V1)
+
+manova.S1 <- manova(cbind(means.S1$var.mean, means2.S1$var.mean) ~ means.S1$WT.cKO)
+# Output: p.value is at the end of the listing
+tidy(manova.S1) 
+# Output: "Response 1" = voi (1st variable of interest), Pr(>F) = p.value
+#         "Response 2" = voi2
+summary.aov(manova.S1)
+
+manova.V1 <- manova(cbind(means.V1$var.mean, means2.V1$var.mean) ~ means.V1$WT.cKO)
+tidy(manova.V1)
+summary.aov(manova.V1)
