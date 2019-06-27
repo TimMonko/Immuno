@@ -22,12 +22,14 @@ library(rowr) # For editing of list into cols with diff lengths - maybe not need
 # CTL + SHFT + H to set WD
 rm(list = ls())
 rescale <- 0.63492 # For 10X its 0.63492 (1/1.575)
-names <- as.character(1:length(dist)) # Latter number is the number of slices needed to be added to the list
 flipROI <- 0 # If 1 then subtracts y's of the poly from the y-dims. To test check plot(combo_px) or plot(dist_tif) > addMask(ROI)
 
 path = getwd()
 file.paths <- list.files(path = path, pattern = '\\.tif$') # I think $ at the end will search for all files with .tif appending the end, I'm not sure what the \\ is for
 file.number <- length(file.paths)
+
+dist <- image_read(file.paths[1])
+names <- as.character(1:length(dist)) # Latter number is the number of slices needed to be added to the list
 
 ## INTERACTIVE SECTION ----
 
@@ -115,29 +117,27 @@ for (im in 1:file.number) {
 par(mfrow = c(2,1)) # Adjust the plot for visualizing both the ROI and the histogram of the centers
 plot(combo.px)
 with(centers, points(mx,my,col="magenta"))
-hist(unlist(centers.my.rel[1]))
+hist(unlist(centers.my.rel[2]))
 ## save to .Rdata -----
-base::save.image(file = 'envCKOall.RData')
+base::save.image(file = 'envWTmid.RData')
 
 ## Loading in Environments for keeping groups of data together---- 
 WT <- new.env()
-load('envWT.RData', envir = WT)
+load('envWTmid.RData', envir = WT)
 WTmed <- new.env()
 #load('envWTmedial.RData', envir = WTmed)
 CKO <- new.env()
-load('envCKO.RData', envir = CKO)
+load('envCKOmid.RData', envir = CKO)
 CKOmed <- new.env()
 #load('envCKOmiddle.RData', envir = CKO)
 
 ## For Joining WT and CKO data with no bins  ----
 # To join the variables from the environment to a single tibble q
 # To add more environments of variables just add more unl, and change the geno and bin as necessary
-unlWT <- 1-unlist(WT$centers.my.rel[1])
+unlWT <- unlist(WT$centers.my.rel[1])
 tib.WT <- tibble(dist = unlWT, geno = 'WT', bin = 'All')
-
-unlCKO <- 1-unlist(CKO$centers.my.rel[1])
+unlCKO <- unlist(CKO$centers.my.rel[1])
 tib.CKO <- tibble(dist = unlCKO, geno = 'CKO', bin = 'All')
-
 
 combo.dist <- bind_rows(tib.WT, tib.CKO)
 
@@ -179,22 +179,24 @@ density.plot <- ggplot(data = combo.dist, aes(x = dist, fill = geno)) +
   geom_density(kernel = 'gaussian', adjust = 0.3, alpha = 0.5) +
   labs(x = 'Relative Distance from VZ to Pia',
        y = 'Density of Tbr2+ Cells',
-       title = 'Tbr2 Distribution at E16.5 - Putative V1',
+       title = 'Tbr2 Distribution at E14.5 - Putative S1',
        fill = 'Genotype') +
   scale_x_continuous(limits = c(0, 1),
                    breaks = seq(0, 1, 0.2)) +
   theme(legend.position = c(0.85, 0.7)) +
-  geom_vline(xintercept = 0.65, linetype = 'dashed') + # Subplate
+  #geom_vline(xintercept = 0.65, linetype = 'dashed') + # Subplate
   #geom_vline(xintercept = 0.13, linetype = 'dashed') + # VZ border
   #geom_vline(xintercept = 0.05, linetype = 'dashed') + # Tbr2 dense lower
-  geom_vline(xintercept = 0.19, linetype = 'dashed') + # Tbr2 dense upper
-  geom_vline(xintercept = 0.50, linetype = 'dashed') # Tbr2 sparse upper
+  #geom_vline(xintercept = 0.19, linetype = 'dashed') + # Tbr2 dense upper
+  #geom_vline(xintercept = 0.50, linetype = 'dashed') + # Tbr2 sparse upper
+  geom_vline(xintercept = 0.64, linetype = 'dashed') + # NG1 lower E14.5
+  geom_vline(xintercept = 0.77, linetype = 'dashed') # NG1 upper E14.5
 density.plot
 
 
 
 ## SAVE PLOT ----
-ggsave(filename = 'Tbr2 V1 E16Vgf Dist Smaller2.svg', device = 'svg', width = 4, height = 3, units = 'in')
+ggsave(filename = 'Tbr2 S1 E16Vgf Dist Smaller2.svg', device = 'svg', width = 4, height = 3, units = 'in')
 
 ## For Removing some bins and such----
 combo.filter <- filter(combo.dist, dist < 0.65 & dist > 0.5)
