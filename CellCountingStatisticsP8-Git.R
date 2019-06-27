@@ -14,11 +14,12 @@ library(broom)
 rm(list = ls())
 
 ## ----
-rawdata <- read.csv("Gbx2P8Brn2ROR.csv") # Set the file that you want to read here
+rm(list = ls())
+rawdata <- read.csv("Gbx2P8Ctip2Cc3.csv") # Set the file that you want to read here
 
 ## VARIABLES TO DEFINE ----
 
-dep.variable <- quo(Brn2) #used for t-test and MANOVA analysis (as first grouping variable)
+dep.variable <- quo(CC3.deep) #used for t-test and MANOVA analysis (as first grouping variable)
 # dep.variable.2 <- quo(ROR) #used for MANOVA analysis as the second grouping variable
 Bin1 <- '1' # Bin for separation, such as S1 or Caudal, or 1 etc
 Bin2 <- '2' 
@@ -28,6 +29,7 @@ grouped_var <- function(dataframe, var.of.interest) {
   #grouped_var2 allows the user to define the variable of interest about with the quo(arg) call. then the !! var.of.interest removes the special quosure to be evaluted in the functions, to be used only for upper level function calls. Otherwise use grouped_var original
   grouped.var <- 
     dataframe %>% # Calls the data.frame of interest
+    # filter(dataframe$Ifbad.1 != 1) %>%
     drop_na(!! var.of.interest) %>% # Removes all rows with NAs,  could use filter(!is.na(Ctip2)), but drop_na allows for dropping based on multiple criteria
     group_by(S1.V1, WT.cKO, Pair) %>% # Groups the rawdata according to a variable LEVEL may go here
     summarize(var.mean = mean(!! var.of.interest)) # Used for functions performed on the grouped data
@@ -80,8 +82,6 @@ test.results <- bind_rows(
   'w.combo' = p.w.comboBin,
   .id = 'Test')
 
-test.results
-
 # PLOTS FOR QUICK VISUALIZATION
 
 plot.Bin1 <- ggplot(means.Bin1, aes(x = WT.cKO, y = var.mean)) +
@@ -132,18 +132,20 @@ plot.comboBin <- ggplot(means.comboBin, aes(x = WT.cKO, y = var.mean)) +
 
 plot(plot.Bin1)
 plot(plot.Bin2)
-# plot(plot.comboBin)
+#  plot(plot.comboBin)
+
+test.results
 
 ## PLOTTING FOR PUBLISHINGS, WTIH FXN STYLE INPUTS ----
 ###---###
 ###---###
 
-file.name.saveas <- "P8-Gbx2-S1-Brn2.svg"
-plot.df <- means.Bin1
-labs.title <- "S1"
+file.name.saveas <- "P8-Gbx2-V1-CC3deep.svg"
+plot.df <- means.Bin2
+# Bin <- 2
+labs.title <- "V1"
 labs.x <- "Genotype"
-labs.y <- "Brn2+ cells"
-p.val <- p.t.Bin1$p.value
+labs.y <- "Pia-to-ventricle, μm"
 
 data.x <- plot.df$WT.cKO
 data.y <- plot.df$var.mean
@@ -163,7 +165,10 @@ print.plot <- ggplot(plot.df, aes(x = data.x, y = data.y)) +
   geom_line(aes(group = line.group)) +
   scale_x_continuous(breaks = c(1, 2), 
                      labels = c("CTRL", "cKO"), 
-                     limits = c(0.8,2.2))
+                     limits = c(0.8,2.2)) 
+#  annotate("text", x = 1.5, y = max(plot.df$var.mean),
+#           label = if (test.results$p.value[Bin] < .05) {
+#           paste("*") })
 
 print.plot
 ## For saving the most recently called plot ----
