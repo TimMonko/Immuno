@@ -123,21 +123,21 @@ base::save.image(file = 'envWTmid.RData')
 
 ## Loading in Environments for keeping groups of data together---- 
 WT <- new.env()
-load('envWTmid.RData', envir = WT)
+load('envPax6.RData', envir = WT)
 WTmed <- new.env()
 #load('envWTmedial.RData', envir = WTmed)
 CKO <- new.env()
-load('envCKOmid.RData', envir = CKO)
+load('envWT2.RData', envir = CKO)
 CKOmed <- new.env()
 #load('envCKOmiddle.RData', envir = CKO)
 
-## For Joining WT and CKO data with no bins  ----
+## For Joining WT and CKO data with no bins
 # To join the variables from the environment to a single tibble q
 # To add more environments of variables just add more unl, and change the geno and bin as necessary
 unlWT <- unlist(WT$centers.my.rel[1])
-tib.WT <- tibble(dist = unlWT, geno = 'WT', bin = 'All')
-unlCKO <- unlist(CKO$centers.my.rel[1])
-tib.CKO <- tibble(dist = unlCKO, geno = 'CKO', bin = 'All')
+tib.WT <- tibble(dist = unlWT, geno = 'Pax6', bin = 'All')
+unlCKO <- 1-unlist(CKO$centers.my.rel[1])
+tib.CKO <- tibble(dist = unlCKO, geno = 'Tbr2', bin = 'All')
 
 combo.dist <- bind_rows(tib.WT, tib.CKO)
 
@@ -175,11 +175,11 @@ kt1 <- ks.test(unl1, unl2)
 ## ----
 ## Current plot method----
 density.plot <- ggplot(data = combo.dist, aes(x = dist, fill = geno)) +
-  theme_classic(base_size = 16) + 
-  geom_density(kernel = 'gaussian', adjust = 0.3, alpha = 0.5) +
+  theme_classic(base_size = 18) + 
+  geom_density(kernel = 'gaussian', adjust = 0.3, alpha = 0.5, aes( y = ..count..)) + #aes(y = ..count..)  for relative stuff
   labs(x = 'Relative Distance from VZ to Pia',
-       y = 'Density of Tbr2+ Cells',
-       title = 'Tbr2 Distribution at E14.5 - Putative S1',
+       y = 'Density of Cells',
+       title = 'E14.5 PH3 Distribution',
        fill = 'Genotype') +
   scale_x_continuous(limits = c(0, 1),
                    breaks = seq(0, 1, 0.2)) +
@@ -196,8 +196,27 @@ density.plot
 
 
 ## SAVE PLOT ----
-ggsave(filename = 'Tbr2 S1 E16Vgf Dist Smaller2.svg', device = 'svg', width = 4, height = 3, units = 'in')
+ggsave(filename = 'Pax6Tbr2 S1 E16 EMBO rel.svg', device = 'svg', width = 5, height = 4, units = 'in')
+ggsave(filename = 'Pax6Tbr2 S1 E16 EMBO rel.png', device = 'png', width = 5, height = 4, units = 'in')
 
+## COLORFUL plot Method with normalizing the numbers ---- 
+density.plot <- ggplot(data = combo.dist, aes(x = dist, group = geno, fill = geno)) + #use group = desc(geno) if need to change order of the bars
+  theme_classic(base_size = 16) + 
+  geom_density(kernel = 'gaussian', adjust = 0.3, alpha = 0.5, aes(y = ..count../1000)) +
+  labs(x = 'Relative Distance from VZ to Pia',
+       y = 'Density of Cells',
+       title = 'Sall1 Distribution at E16.5 - Putative V1',
+       fill = 'Genotype') +
+  scale_fill_manual(values = c('magenta', 'green')) +
+  scale_x_continuous(limits = c(0, 1),
+                     breaks = seq(0, 1, 0.2)) +
+  theme(legend.position = c(0.85, 0.7)) +
+  geom_vline(xintercept = 0.65, linetype = 'dashed') + # Subplate
+  #geom_vline(xintercept = 0.13, linetype = 'dashed') + # VZ border
+  #geom_vline(xintercept = 0.05, linetype = 'dashed') + # Tbr2 dense lower
+  geom_vline(xintercept = 0.19, linetype = 'dashed') + # Tbr2 dense upper
+  geom_vline(xintercept = 0.50, linetype = 'dashed') # Tbr2 sparse upper
+density.plot
 ## For Removing some bins and such----
 combo.filter <- filter(combo.dist, dist < 0.65 & dist > 0.5)
 filter.WT <- filter(combo.filter, geno == 'WT')
