@@ -19,7 +19,7 @@ library(xROI) # For drawing a pol\
 library(rowr) # For editing of list into cols with diff lengths - maybe not needed 
 
 ## PREPPING IMAGES FOR ANALYSIS ----
-# CTL + SHFT + H to set WD
+# !!! CTL + SHFT + H to set WD  !!!!
 rm(list = ls())
 rescale <- 0.63492 # For 10X its 0.63492 (1/1.575)
 flipROI <- 0 # If 1 then subtracts y's of the poly from the y-dims. To test check plot(combo_px) or plot(dist_tif) > addMask(ROI)
@@ -118,16 +118,16 @@ par(mfrow = c(2,1)) # Adjust the plot for visualizing both the ROI and the histo
 plot(combo.px)
 with(centers, points(mx,my,col="magenta"))
 hist(unlist(centers.my.rel[2]))
-## save to .Rdata -----
-base::save.image(file = 'envWTmid.RData')
+## save to .Rdata (will save all the variables for later use) -----
+base::save.image(file = 'envCKOtest.RData')
 
 ## Loading in Environments for keeping groups of data together---- 
 WT <- new.env()
-load('envPax6.RData', envir = WT)
+load('envCKOtest.RData', envir = WT)
 WTmed <- new.env()
 #load('envWTmedial.RData', envir = WTmed)
 CKO <- new.env()
-load('envWT2.RData', envir = CKO)
+load('envCKOtest.RData', envir = CKO)
 CKOmed <- new.env()
 #load('envCKOmiddle.RData', envir = CKO)
 
@@ -136,7 +136,7 @@ CKOmed <- new.env()
 # To add more environments of variables just add more unl, and change the geno and bin as necessary
 unlWT <- unlist(WT$centers.my.rel[1])
 tib.WT <- tibble(dist = unlWT, geno = 'Pax6', bin = 'All')
-unlCKO <- 1-unlist(CKO$centers.my.rel[1])
+unlCKO <- unlist(CKO$centers.my.rel[1])
 tib.CKO <- tibble(dist = unlCKO, geno = 'Tbr2', bin = 'All')
 
 combo.dist <- bind_rows(tib.WT, tib.CKO)
@@ -176,19 +176,19 @@ kt1 <- ks.test(unl1, unl2)
 ## Current plot method----
 density.plot <- ggplot(data = combo.dist, aes(x = dist, fill = geno)) +
   theme_classic(base_size = 18) + 
-  geom_density(kernel = 'gaussian', adjust = 0.3, alpha = 0.5, aes( y = ..count..)) + #aes(y = ..count..)  for relative stuff
+  geom_density(kernel = 'gaussian', adjust = 0.3, alpha = 0.5) + #aes(y = ..count..)  for relative stuff
   labs(x = 'Relative Distance from VZ to Pia',
        y = 'Density of Cells',
-       title = 'E14.5 PH3 Distribution',
-       fill = 'Genotype') +
+       title = 'E16.5 Progenitor Distribution',
+       fill = 'Marker') +
   scale_x_continuous(limits = c(0, 1),
                    breaks = seq(0, 1, 0.2)) +
   theme(legend.position = c(0.85, 0.7)) +
-  #geom_vline(xintercept = 0.65, linetype = 'dashed') + # Subplate
+  geom_vline(xintercept = 0.65, linetype = 'dashed') + # Subplate
   #geom_vline(xintercept = 0.13, linetype = 'dashed') + # VZ border
   #geom_vline(xintercept = 0.05, linetype = 'dashed') + # Tbr2 dense lower
   #geom_vline(xintercept = 0.19, linetype = 'dashed') + # Tbr2 dense upper
-  #geom_vline(xintercept = 0.50, linetype = 'dashed') + # Tbr2 sparse upper
+  geom_vline(xintercept = 0.50, linetype = 'dashed') + # Tbr2 sparse upper
   geom_vline(xintercept = 0.64, linetype = 'dashed') + # NG1 lower E14.5
   geom_vline(xintercept = 0.77, linetype = 'dashed') # NG1 upper E14.5
 density.plot
