@@ -24,13 +24,6 @@ dep.variable <- quo(SVZ) #used for t-test and MANOVA analysis (as first grouping
 Bin1 <- 'Cmed' # Bin for separation, such as S1 or Caudal, or 1 etc
 Bin2 <- 'Cmid' 
 
-group.test <- rawdata %>% 
-  filter(is.na(rawdata$Ifbad.1)) %>%
-  drop_na(SVZ) %>%
-  group_by(Level, WT.cKO, Pair)
-
-
-
 grouped_var <- function(dataframe, var.of.interest) {
   #grouped_var2 allows the user to define the variable of interest about with the quo(arg) call. then the !! var.of.interest removes the special quosure to be evaluted in the functions, to be used only for upper level function calls. Otherwise use grouped_var original
   grouped.var <- 
