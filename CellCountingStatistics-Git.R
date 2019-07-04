@@ -15,28 +15,35 @@ rm(list = ls())
 
 ## ----
 rm(list = ls())
-rawdata <- read.csv("Gbx2P8Ctip2Cc3.csv") # Set the file that you want to read here
+rawdata <- read.csv("E16Sall1Tbr2.csv") # Set the file that you want to read here
 
 ## VARIABLES TO DEFINE ----
 
-dep.variable <- quo(CC3.deep) #used for t-test and MANOVA analysis (as first grouping variable)
+dep.variable <- quo(SVZ) #used for t-test and MANOVA analysis (as first grouping variable)
 # dep.variable.2 <- quo(ROR) #used for MANOVA analysis as the second grouping variable
-Bin1 <- '1' # Bin for separation, such as S1 or Caudal, or 1 etc
-Bin2 <- '2' 
+Bin1 <- 'Cmed' # Bin for separation, such as S1 or Caudal, or 1 etc
+Bin2 <- 'Cmid' 
+
+group.test <- rawdata %>% 
+  filter(is.na(rawdata$Ifbad.1)) %>%
+  drop_na(SVZ) %>%
+  group_by(Level, WT.cKO, Pair)
+
 
 
 grouped_var <- function(dataframe, var.of.interest) {
   #grouped_var2 allows the user to define the variable of interest about with the quo(arg) call. then the !! var.of.interest removes the special quosure to be evaluted in the functions, to be used only for upper level function calls. Otherwise use grouped_var original
   grouped.var <- 
     dataframe %>% # Calls the data.frame of interest
-    # filter(dataframe$Ifbad.1 != 1) %>%
+    filter(is.na(rawdata$Ifbad.1)) %>% 
+    #filter(dataframe$Ifbad.1 != 1) %>%  ## deprecated? 
     drop_na(!! var.of.interest) %>% # Removes all rows with NAs,  could use filter(!is.na(Ctip2)), but drop_na allows for dropping based on multiple criteria
-    group_by(S1.V1, WT.cKO, Pair) %>% # Groups the rawdata according to a variable LEVEL may go here
+    group_by(Level, WT.cKO, Pair) %>% # Groups the rawdata according to a variable LEVEL may go here
     summarize(var.mean = mean(!! var.of.interest)) # Used for functions performed on the grouped data
   return(grouped.var)
 }
 subset_var <- function(grouped.var, WTcKO, Bin) {
-  subset(grouped.var, WT.cKO == WTcKO & S1.V1 == Bin) # Subset may present an issue. Pay attention to S1.V1 
+  subset(grouped.var, WT.cKO == WTcKO & Level == Bin) # Subset may present an issue. Pay attention to S1.V1 
 }
 ttest_var <- function(means.1, means.2, equalvari = TRUE, paird = TRUE) {
   tidy(t.test(means.1$var.mean, means.2$var.mean, var.equal = equalvari, paired = paird))
@@ -132,7 +139,7 @@ plot.comboBin <- ggplot(means.comboBin, aes(x = WT.cKO, y = var.mean)) +
 
 plot(plot.Bin1)
 plot(plot.Bin2)
-#  plot(plot.comboBin)
+plot(plot.comboBin)
 
 test.results
 
