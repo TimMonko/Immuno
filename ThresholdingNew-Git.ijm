@@ -7,7 +7,7 @@ numchannels = 3; //use the number of 16-bit channels, if RGB set to 3
 
 runThresholdCode = 1; //if 1, then run the accompanying code, else skip
 runExtras = 1; //this is specifically for fillholes and remove particles based on size
-runColocCode = 0; //1 = run colocalization using Binary Feature Extractor, 0 = off
+runColocCode = 1; //1 = run colocalization using Binary Feature Extractor, 0 = off
 
 /////////////////////////////////
 ///THRESHOLDING CODE VARIABLES///
@@ -16,11 +16,11 @@ runColocCode = 0; //1 = run colocalization using Binary Feature Extractor, 0 = o
 //RED /GRAY == also for 16-bit gray single channels
 dored = 1; // 1 = will run this  channel, 0 = skip, will close the image
 redtograyscale = 0; // 1 = will not threshold image, instead just puts on grayscale LUT (for things such as WFA)
-redrbr = 2; // Rolling ball radius.  
+redrbr = 0.5; // Rolling ball radius.  
 	// For old Photoshop binning. At 10X, 0.01 for poor S/N. Up to 0.1 for good S/N and/or larger cells
 	// For RGB usually 1 -5
 	// For new FIJI binning. 0.1 for poor S/N and high cell density, up to 5 for good S/N and lower cell density
-rthreslow = 0.25;  // lower threshold for this channel, this is a "percentage" of the maximum signal from normalization, which helps intuitively. ie 0.20 means that what is kept is all values 20% or higher
+rthreslow = 0.15; // lower threshold for this channel, this is a "percentage" of the maximum signal from normalization, which helps intuitively. ie 0.20 means that what is kept is all values 20% or higher
 // rthreshigh = 100;
 redwatererosion = 10; // if a number that is not zero is put in convex, then this value is ignored. 10 = around normal watershed algorithm
 redwaterconvex = 0; // Useful for dividing cells (PH3 + EdU) 0.95 might be good for dividng cells, but this is potentially threshold dependent. Keep this number high or it won't watershed soma effectively for our purposes (morphology analysis would be different)
@@ -28,17 +28,17 @@ redwaterconvex = 0; // Useful for dividing cells (PH3 + EdU) 0.95 might be good 
 //GREEN
 dogreen = 1;
 greentograyscale = 0;
-greenrbr = 0.1; // 0.01ish for 16-bit, 10ish for 8-bit (at 10x)
-gthreslow = 0.15; //25
+greenrbr = 0.5; // 0.01ish for 16-bit, 10ish for 8-bit (at 10x)
+gthreslow = 0.10; //25
 // gthreshigh = 100;
 greenwatererosion = 10;
 greenwaterconvex = 0;
 
 //BLUE
-doblue = 0; 
+doblue = 1; 
 bluetograyscale = 0; 
 bluerbr = 1; 
-bthreslow = 0.20;
+bthreslow = 0.15;
 // bthreshigh = 100; // upper threshold for green channel, keep at 4 for 16bit channels (is 400% maximum value if normalizing on 32-bit)
 bluewatererosion = 10; 
 bluewaterconvex = 0.95; 
@@ -66,27 +66,27 @@ removeparticlesBlue = 1; particlesizeBlue = 5;
 //Which channels do you have? 1= run this channel for its accompanying colocalization, 0 = this channel isn't there so don't run it
 haveRed = 1;
 haveGreen = 1;
-haveBlue = 0;
-haveTriple = 0;
+haveBlue = 1;
+haveTriple = 1;
 
 //Objects and Selectors. These should be relatively consistent for the marker that you are doing.
 //OverlapXX = Percentages for the BFE overlap filter. Needs to be identified for every colocalization separately. To do so use Analyze Particles with %Area Output. Set the redirect in "Set Measurements". The Object image is analyzed, while the selector image is redirected against.
 //Binary feature extractory is a BioVoxxel plugin that compares two images, checks for a percentage of overlap, and recombines the images with an output selecting only colocalized images
 
-ObjectRedGreen = "Green"; //format = "Color", i.e. "Red"
-SelectorRedGreen = "Red";
+ObjectRedGreen = "Red"; //format = "Color", i.e. "Red"
+SelectorRedGreen = "Green";
 overlapRedGreen = 50; //this is the BFE percentage. (see above)
 
-ObjectRedBlue = "Blue";
-SelectorRedBlue = "Red";
-overlapRedBlue = 40;
+ObjectRedBlue = "Red";
+SelectorRedBlue = "Blue";
+overlapRedBlue = 50;
 
 ObjectBlueGreen = "Green";
 SelectorBlueGreen = "Blue";
-overlapBlueGreen = 50;
+overlapBlueGreen = 40;
 
-ObjectTriple = "Blue";
-SelectorTriple = ObjectRedGreen + "_On_" + SelectorRedGreen; //this is the only format that is slightly different. use the object/selector combo as such to call the properly title image. leave the "_On_" intact.
+SelectorTriple = ObjectRedGreen + "_On_" + SelectorRedGreen;
+ObjectTriple = "Blue"; //this is the only format that is slightly different. use the object/selector combo as such to call the properly title image. leave the "_On_" intact.
 overlapTriple = 50;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -298,7 +298,7 @@ if (haveRed==1 && haveGreen==1) {
 	selectWindow(SelectorRedGreen);
 	run("Duplicate...", " "); 
 	rename("SelectorRG");
-	run("Binary Feature Extractor", "objects=ObjectRG selector=SelectorRG object_overlap=overlapRedGreen combine");
+	run("Binary Feature Extractor", "objects=ObjectRG selector=SelectorRG object_overlap=overlapRedGreen");
 	rename(ObjectRedGreen + "_On_" + SelectorRedGreen);
 	close("ObjectRG");
 	close("SelectorRG");
@@ -311,7 +311,7 @@ if (haveRed==1 && haveBlue==1) {
 	selectWindow(SelectorRedBlue);
 	run("Duplicate...", " "); 
 	rename("SelectorRB");
-	run("Binary Feature Extractor", "objects=ObjectRB selector=SelectorRB object_overlap=overlapRedBlue combine");
+	run("Binary Feature Extractor", "objects=ObjectRB selector=SelectorRB object_overlap=overlapRedBlue");
 	rename(ObjectRedBlue + "_On_" + SelectorRedBlue);
 	close("ObjectRB");
 	close("SelectorRB");
@@ -324,7 +324,7 @@ if (haveBlue==1 && haveGreen==1) {
 	selectWindow(SelectorBlueGreen);
 	run("Duplicate...", " "); 
 	rename("SelectorBG");
-	run("Binary Feature Extractor", "objects=ObjectBG selector=SelectorBG object_overlap=overlapBlueGreen combine");
+	run("Binary Feature Extractor", "objects=ObjectBG selector=SelectorBG object_overlap=overlapBlueGreen");
 	rename(ObjectBlueGreen + "_On_" + SelectorBlueGreen);
 	close("ObjectBG");
 	close("SelectorBG");
@@ -337,7 +337,7 @@ if (haveTriple==1) {
 	selectWindow(SelectorTriple);
 	run("Duplicate...", " "); 
 	rename("SelectorTriple");
-	run("Binary Feature Extractor", "objects=ObjectTriple selector=SelectorTriple object_overlap=overlapTriple combine");
+	run("Binary Feature Extractor", "objects=ObjectTriple selector=SelectorTriple object_overlap=overlapTriple");
 	rename("Triple");
 	close("ObjectTriple");
 	close("SelectorTriple");
