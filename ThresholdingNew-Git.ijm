@@ -28,8 +28,8 @@ redwaterconvex = 0; // Useful for dividing cells (PH3 + EdU) 0.95 might be good 
 //GREEN
 dogreen = 1;
 greentograyscale = 0;
-greenrbr = 0.5; // 0.01ish for 16-bit, 10ish for 8-bit (at 10x)
-gthreslow = 0.10; //25
+greenrbr = 5; // 0.01ish for 16-bit, 10ish for 8-bit (at 10x)
+gthreslow = 0.15; //25
 // gthreshigh = 100;
 greenwatererosion = 10;
 greenwaterconvex = 0;
@@ -75,19 +75,19 @@ haveTriple = 1;
 
 ObjectRedGreen = "Red"; //format = "Color", i.e. "Red"
 SelectorRedGreen = "Green";
-overlapRedGreen = 50; //this is the BFE percentage. (see above)
+overlapRedGreen = 40; //this is the BFE percentage. (see above)
 
 ObjectRedBlue = "Red";
 SelectorRedBlue = "Blue";
-overlapRedBlue = 50;
+overlapRedBlue = 40;
 
 ObjectBlueGreen = "Green";
 SelectorBlueGreen = "Blue";
 overlapBlueGreen = 40;
 
-SelectorTriple = ObjectRedGreen + "_On_" + SelectorRedGreen;
-ObjectTriple = "Blue"; //this is the only format that is slightly different. use the object/selector combo as such to call the properly title image. leave the "_On_" intact.
-overlapTriple = 50;
+ObjectTriple = "Red";
+SelectorTriple = ObjectBlueGreen + "_On_" + SelectorBlueGreen; //this is the only format that is slightly different. use the object/selector combo as such to call the properly title image. leave the "_On_" intact.
+overlapTriple = 40;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
