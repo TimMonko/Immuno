@@ -68,8 +68,7 @@ for (i = 0; i < listlength; i) {
 	if (duplicatechannel ==1 ) {
 		run("Duplicate...", "duplicate channels=whichchannel");
 		run("Grays");
-		setMinAndMax(0, 866);
-		call("ij.ImagePlus.setDefault16bitRange", 12);
+		run("Enhance Contrast", "saturated=0.35");
 	}
 	
 	if (usebinningmethod == 1) {

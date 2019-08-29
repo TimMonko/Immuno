@@ -9,7 +9,6 @@
 
 # Load order means that later library calls will mask earlier ones if they have the same name. Use 'functionname:libraryname' where double colons (::) points to the desired package
 library(tidyverse) # Includes ggplot2, tidyr, dplyr, stringr, readr, tibble, purrr, forcats
-library(broom)
 library(svglite) # For exporting plots as .svg graphics to use as vector format
 library(magick) # A more general image altering package
 library(imager) # For loading of stacks, I think to be used with magick
@@ -18,7 +17,7 @@ library(imager) # For loading of stacks, I think to be used with magick
 library(xROI) # For drawing a pol\
 library(rowr) # For editing of list into cols with diff lengths - maybe not needed 
 
-## PREPPING IMAGES FOR ANALYSIS ----
+## (2) PREPPING IMAGES FOR ANALYSIS ----
 # !!! CTL + SHFT + H to set WD  !!!!
 rm(list = ls())
 rescale <- 0.63492 # For 10X its 0.63492 (1/1.575)
@@ -31,7 +30,7 @@ file.number <- length(file.paths)
 dist <- image_read(file.paths[1])
 names <- as.character(1:length(dist)) # Latter number is the number of slices needed to be added to the list
 
-## INTERACTIVE SECTION ----
+## (3) INTERACTIVE SECTION ----
 
 # Create empty lists to deposit data into with the for loop (I read that lapply is better for this, but I can't figure out how to make it work)
 cell.counts <- NULL
@@ -113,15 +112,15 @@ for (im in 1:file.number) {
   }
 }
 
-## ----
+## (4) QUICK VISIAULIZATION----
 par(mfrow = c(2,1)) # Adjust the plot for visualizing both the ROI and the histogram of the centers
 plot(combo.px)
 with(centers, points(mx,my,col="magenta"))
 hist(unlist(centers.my.rel[2]))
-## save to .Rdata (will save all the variables for later use) -----
+## (5) SAVE to .Rdata (will save all the variables for later use) -----
 base::save.image(file = 'envCKOtest.RData')
 
-## Loading in Environments for keeping groups of data together---- 
+## (6) Loading in Environments for keeping groups of data together---- 
 WT <- new.env()
 load('envCKOtest.RData', envir = WT)
 WTmed <- new.env()
@@ -141,39 +140,7 @@ tib.CKO <- tibble(dist = unlCKO, geno = 'Tbr2', bin = 'All')
 
 combo.dist <- bind_rows(tib.WT, tib.CKO)
 
-## OUTDATED, Kept for posterity ----
-unl1 <- unlist(WT$centers.my.rel[1])
-dist <- unl1
-df1 <- tibble(dist)
-df1 <- add_column(df1, geno = 'WT', bin = 'Mid')
-
-unl2 <- unlist(CKO$centers.my.rel[1])
-length(unl2) <- length(unl1)
-dist <- unl1
-df2 <- tibble(dist)
-df2 <- add_column(df2, geno = 'cKO', bin = 'Mid')
-
-unl3 <- unlist(WTmed$centers.my.rel[1])
-length(unl3) <- length(unl1)
-dist <- unl3
-df3 <- tibble(dist)
-df3 <- add_column(df3, geno = 'WT', bin = 'Med')
-
-unl4 <- unlist(CKOmed$centers.my.rel[1])
-length(unl4) <- length(unl1)
-dist <- unl4
-df4 <- tibble(dist)
-df4 <- add_column(df4, geno = 'cKO', bin = 'Med')
-
-combo.dist <- bind_rows(df1, df2)
-combo.dist.allbins <- bind_rows(df1, df2, df3, df4)
-# https://stackoverflow.com/questions/45098389/normalizing-y-axis-in-density-plots-in-r-ggplot-to-proportion-by-group
-
-
-fill1 <- c('red', 'CKO')
-kt1 <- ks.test(unl1, unl2)
-## ----
-## Current plot method----
+## (7) Current plot method----
 density.plot <- ggplot(data = combo.dist, aes(x = dist, fill = geno)) +
   theme_classic(base_size = 18) + 
   geom_density(kernel = 'gaussian', adjust = 0.3, alpha = 0.5) + #aes(y = ..count..)  for relative stuff
@@ -195,7 +162,7 @@ density.plot
 
 
 
-## SAVE PLOT ----
+## (8) SAVE PLOT ----
 ggsave(filename = 'Pax6Tbr2 S1 E16 EMBO rel.svg', device = 'svg', width = 5, height = 4, units = 'in')
 ggsave(filename = 'Pax6Tbr2 S1 E16 EMBO rel.png', device = 'png', width = 5, height = 4, units = 'in')
 
