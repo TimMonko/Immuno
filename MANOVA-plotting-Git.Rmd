@@ -1,0 +1,136 @@
+---
+title: "CellCountStatistics"
+author: "Tim Monko"
+date: "`r Sys.Date()`"
+output: html_document
+# knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding = encoding, output_file = file.path(dirname(inputFile), 'Pax6PFCtest.html')) }) # Function seems only to work on non-servered instances of working directories
+---
+
+```{r global_options, include = FALSE}
+# In R Markdown, include = FALSE prevents display of all code, plots, etc within a given chunk. By default, include = TRUE
+library(tidyverse) # Includes ggplot2, tidyr, dplyr, stringr, readr, tibble, purrr, forcats, broom 
+library(ggpubr)
+library(svglite)
+library(broom) # now in tidy? 
+library(data.table)
+```
+
+```{r cache_settings, echo = FALSE}
+dir.name <- 'P8-Gbx2-allneurons'
+dir.create(dir.name) 
+
+knitr::opts_chunk$set(fig.height = 4, cache = TRUE, cache.path = paste0(dir.name, '-cache/')) # fig.path = 'Figs/' ## Will save figs into a separate file 
+```
+
+```{r Data Management, echo = FALSE}
+# echo = FALSE prevents printing of mundance code (can always set a function clause to echo = TRUE, if needed), by default echo = TRUE
+# Shortcut to set working directy: CTRL + SHFT + H, by default the working directory is in the .Rmd file location
+file.name <- "Gbx2P8all.csv"
+rawdata <- read.csv(file.name)
+
+#Preliminary data manipulation to prepare the dataset, can do math on columns -- mutate(newcolZ = colX + colY)
+#Add column to alter titles for consisteny -- mutate(newcolY = colX)
+#For editing variables use case_when for multiple cases. Case_when(Column == case ~ replacement case). for multi-case -- case_when(Column %in% c(X, Y, Z) ~ replacement case)
+rawdata <- as_tibble(rawdata) %>%
+  #mutate(Level = S1.V1) %>%
+  #mutate(Tbr2all = Tbr2.SVZ + Tbr2.IZ) %>%
+  mutate(Level = case_when(Level == 1 ~ 'S1',
+                           Level == 2 ~ 'V1'))
+
+## Statistical and plotting code - hands free
+col.names <- colnames(rawdata[,c(6,7,11)])
+
+rm(stacked.df)
+for (i in 1:length(col.names)) {
+
+var.name <- as.name(col.names[i])
+quo.var <- enquo(var.name)
+
+grouped.df <- rawdata %>%
+  drop_na(!! quo.var) %>%
+  mutate(WT.cKO = factor(WT.cKO)) %>%
+  mutate(Level = factor(Level)) %>%
+  mutate(Pair = factor(Pair)) %>%
+  group_by(Level, WT.cKO, Pair) %>%
+  mutate(var.mean = mean(!! quo.var)) %>%
+  arrange(WT.cKO)  %>% 
+  group_by(Level, WT.cKO, Pair) %>%
+  distinct(var.mean, .keep_all = FALSE) %>%
+  spread(WT.cKO, var.mean) %>%
+  mutate(rel.mean = `2` / `1`) %>%
+  ungroup() %>%
+  group_by(Level) %>%
+  mutate(avg.rel = mean(rel.mean)) %>%
+  mutate(sd.rel = sd(rel.mean)) %>%
+  mutate(DV = col.names[i])
+
+test <- exists('stacked.df') 
+
+  if (test == FALSE) {
+    stacked.df <- grouped.df #%>% mutate(!! quo.var := rel.mean)
+  } else {
+    stacked.df <- bind_rows(stacked.df, grouped.df)# %>% mutate(!! quo.var := grouped.df$rel.mean)
+  }
+}
+# Below is useful for dropping any values in post that are undesired, refactoring levels from characters, ordering (ordered) levels, etc. 
+stacked.df <- stacked.df %>%
+  mutate(DV = factor(DV)) %>%
+  mutate(Pair = factor(Pair)) %>%
+  mutate(DV = ordered(DV, levels = c('Ctip2', 'ROR', 'Brn2')))
+```
+
+```{r Statistics, echo = FALSE}
+
+all.levels <- levels(stacked.df$Level)
+manova.tests <- vector(mode = 'list', length = length(all.levels))
+univariate.tests <- vector(mode = 'list', length = length(all.levels))
+
+for (j in 1:length(all.levels)) {
+  manova.rel.df <- stacked.df %>%
+    filter(Level == all.levels[j]) %>% 
+    add_column(rel.WT = 1) %>%
+    pivot_longer(cols = c(rel.mean, rel.WT), names_to = 'WT.cKO', values_to = 'rel.val') %>%
+    mutate(WT.cKO = factor(WT.cKO)) %>%
+    pivot_wider(names_from = DV, values_from = rel.val)
+  manova.rel.df <- as_tibble(data.table(manova.rel.df)[, lapply(.SD, function(x) x[order(is.na(x))])]) %>%
+  drop_na()
+  
+  p.man <- manova(cbind(Ctip2, ROR, Brn2) ~ WT.cKO, data = manova.rel.df)
+  manova.tests[[j]] <- summary(p.man, test = 'Pillai')
+  univariate.tests[[j]] <- summary.aov(p.man)
+  
+  print(all.levels[j])
+  print(manova.tests[j])
+  print(univariate.tests[j])
+}
+```
+
+``` {r Plotting, echo = FALSE}
+
+cbp1 <- c("#999999", "#E69F00", "#56B4E9", "#009E73",
+          "#F0E442", "#0072B2", "#D55E00", "#CC79A7") # Colorblind pallette with grey first variable
+
+#This here is where it would be best to keep only the columns interested in
+stacked.df.plot <- stacked.df %>%
+  filter(Level %in% c('V1', 'S1'))
+
+facet.plot <- ggplot(stacked.df.plot, aes(x = 0, y = rel.mean, colour = DV)) +
+  facet_wrap(~ Level, strip.position = 'bottom') +
+  theme_classic(base_size = 13) +
+  geom_jitter(size = 1, shape = 1, position = position_jitterdodge(jitter.width = 1, dodge.width = 3)) +
+  geom_point(size = 5, shape = 13, stroke = 0.6, aes(y = avg.rel), position = position_dodge(3)) +
+  geom_hline(aes(yintercept = 1), linetype = 'dashed') +
+  scale_colour_manual(values = cbp1, name = element_blank(), labels = c('CTIP2', ' ROR', 'BRN2')) +
+  labs(y = 'Rel. Cell#, cKO/WT',
+       x = element_blank()) +
+  ylim(0, 1.5) +
+  scale_x_discrete() +
+  guides(color = guide_legend(override.aes = list(size = 3))) # To make the legend symbol smaller
+
+facet.plot
+
+setwd(paste(getwd(), dir.name, sep = '/'))
+# Use DPI 1000 or so for png to introduce false anti-aliasing on Windows. On Mac this in unnecessary but may still look good. 
+ggsave(filename = 'Gbx2P8-neurons.png', device = 'png', width = (4 + length(col.names))*1.32, height = 4.1*1.32, unit = 'cm', dpi = 1000)
+ggsave(filename = 'Gbx2P8-neurons.svg', device = 'svg', width = (4 + length(col.names))*1.32, height = 4.1*1.32, unit = 'cm')
+```
