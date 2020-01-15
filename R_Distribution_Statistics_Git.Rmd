@@ -1,0 +1,108 @@
+---
+title: "Distribution_Statistics"
+author: "Tim Monko"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r global_options, include = FALSE}
+library(tidyverse) # Includes ggplot2, tidyr, dplyr, stringr, readr, tibble, purrr, forcats
+library(svglite) # For exporting plots as .svg graphics to use as vector format
+library(broom) # Tidy's up some statistical outputs
+```
+
+```{r cache_settings, echo = FALSE}
+
+dir.name <- 'S1_Brn2ROR_Stats'
+dir.create(dir.name)
+
+knitr::opts_chunk$set(cache = TRUE, cache.path = paste0(dir.name, '-cache/')) # fig.path = 'Figs/' ## Will save figs into a separate file 
+```
+
+```{r data_management, echo = FALSE}
+# echo = FALSE prevents printing of mundance code (can always set a function clause to echo = TRUE, if needed), by default echo = TRUE
+
+wd.path <- getwd()
+file.paths <- list.files(path = wd.path, pattern = '\\.csv$')
+
+# Use all cols to identify certain columns as factors, without this it cannot generate the correct tibble 
+all.cols <- cols(
+  genotype = col_factor(),
+  slice = col_factor(),
+  pair = col_factor(),
+  region = col_factor()
+)
+
+# A function for csv bind
+
+csv_bind <- function(wd.path = getwd(), text.pattern, col.types){
+  bound <- do.call(rbind,
+                    lapply(list.files(path = wd.path, pattern = as.character(text.pattern)),
+                           function(x) read_csv(x, col_types = col.types)))
+  return(bound)
+}
+
+all.centers <- csv_bind(text.pattern = 'centers', col.types = all.cols)
+
+
+all.centers.csvs <- do.call(rbind, 
+                            lapply(list.files(path = wd.path, pattern = 'centers'), 
+                                   function(x) read_csv(x, col_types = all.cols)))
+
+sum.cols <- cols(
+  genotype = col_factor(),
+  slice = col_factor(),
+  pair = col_factor()
+)
+
+summarized.csvs <- do.call(rbind, 
+                           lapply(list.files(path = wd.path, pattern = 'summarized'), 
+                                  function(x) read_csv(x, col_types = sum.cols)))
+
+binned.abs.csvs <- do.call(rbind, 
+                           lapply(list.files(path = wd.path, pattern = 'abs'), 
+                                  function(x) read_csv(x, col_types = sum.cols)))
+binned.rel.csvs <- do.call(rbind, 
+                           lapply(list.files(path = wd.path, pattern = 'rel'), 
+                                  function(x) read_csv(x, col_types = sum.cols)))
+```
+
+``` {r interesting_data, echo = FALSE}
+
+summarized.wide <- summarized.csvs %>% 
+  pivot_wider(id_cols = c(genotype, pair), names_from = slice, values_from = cells, names_prefix = 'cells_')
+
+summarized.manip <- summarized.wide %>%
+  mutate(ROR_EdU = cells_5/cells_3) %>%
+  mutate(Brn2_EdU = cells_6/cells_3)
+
+
+
+
+
+
+```
+
+```{r all_centers_plotting, echo = FALSE}
+
+centers.plot <- ggplot(data = all.centers.csvs, (aes(x = mx.abs.right, fill = genotype, family = 'sans'))) +
+  facet_wrap(~ slice, strip.position = 'top', scales = 'free_y') +
+  theme_classic(base_size = 13) +
+  geom_density(kernel = 'gaussian', adjust = 0.3, alpha = 0.5) + 
+  #geom_vline(data = summarized, aes(xintercept = mx.abs.right, color = genotype), linetype = 'dashed') +
+  scale_x_reverse()
+centers.plot
+
+
+binned.abs.plot <- ggplot(data = binned.abs.csvs, aes(x = binned.mx.abs, y = count.abs, fill = genotype, color = pair)) +
+  facet_wrap(~slice, strip.position = 'top', scales = 'free_y') +
+  theme_classic(base_size = 13) +
+  geom_col(position = position_dodge(preserve = 'single')) 
+binned.abs.plot
+
+abs.plot.2 <- ggplot(data = binned.abs.csvs, aes(x = binned.mx.abs, y = count.abs, color = pair, shape = genotype)) +
+  facet_wrap(~slice, strip.position = 'top', scales = 'free_y') +
+  theme_classic(base_size = 13) + 
+  geom_jitter()
+abs.plot.2
+```
