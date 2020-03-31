@@ -1,0 +1,40 @@
+---
+title: "R_Image_Analysis"
+author: "Tim Monko"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r global_options, include = FALSE}
+library(tidyverse) # Includes ggplot2, tidyr, dplyr, stringr, readr, tibble, purrr, forcats
+library(svglite) # For exporting plots as .svg graphics to use as vector format
+library(broom)
+library(magick) # A more general image altering package
+library(imager) # For loading of stacks, I think to be used with magick
+library(xROI) # For drawing a pol\
+# library(rowr) # For editing of list into cols with diff lengths - maybe not needed 
+```
+
+```{r cache_settings, echo = FALSE}
+rm(list = ls())
+dir.name <- 'PairX_Markers'
+dir.create(dir.name)
+
+knitr::opts_chunk$set(fig.height = 4, cache = TRUE, cache.path = paste0(dir.name, '-cache/')) # fig.path = 'Figs/' ## Will save figs into a separate file 
+```
+
+```{r Data Management, echo = FALSE}
+# echo = FALSE prevents printing of mundance code (can always set a function clause to echo = TRUE, if needed), by default echo = TRUE
+# Shortcut to set working directy: CTRL + SHFT + H, by default the working directory is in the .Rmd file location
+
+rescale <- 0.63492 # For 10X its 0.63492 (1/1.575)
+flipROI <- 0 # If 1, then subtracts y's of the poly from the y-dims. to determine correct metric, check plot(combo_px) or plot(dist_tif) > addmask(ROI)
+
+wd.path <- getwd()
+file.paths <- list.files(path = path2, pattern = '\\.tif$') # $ at end searches for all files ending in .tif
+file.number <- length(file.paths)
+
+dist <- image_read(file.paths[1])
+names <- as.character(1:length(dist))
+
+```

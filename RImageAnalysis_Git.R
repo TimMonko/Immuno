@@ -15,7 +15,7 @@ library(imager) # For loading of stacks, I think to be used with magick
 # library(EBImage) # This is probably the easiest and most targeted one, but is maybe jus8t a small version of ImageMagick
 # library(shiny) # This is needed for some ofe xROI's functionality - maybe? 
 library(xROI) # For drawing a pol\
-library(rowr) # For editing of list into cols with diff lengths - maybe not needed 
+library(rowr) # For editing of list into cols with diff lengths - maybe not needed
 
 ## (2) PREPPING IMAGES FOR ANALYSIS ----
 # !!! CTL + SHFT + H to set WD  !!!!
@@ -23,7 +23,7 @@ rm(list = ls())
 rescale <- 0.63492 # For 10X its 0.63492 (1/1.575)
 flipROI <- 0 # If 1 then subtracts y's of the poly from the y-dims. To test check plot(combo_px) or plot(dist_tif) > addMask(ROI)
 
-path = getwd()
+path <- getwd()
 file.paths <- list.files(path = path, pattern = '\\.tif$') # I think $ at the end will search for all files with .tif appending the end, I'm not sure what the \\ is for
 file.number <- length(file.paths)
 
